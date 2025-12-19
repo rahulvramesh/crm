@@ -3,6 +3,12 @@
 import { prisma } from "./db";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import {
+  hashPassword,
+  verifyPassword,
+  createSession,
+  deleteSession,
+} from "./auth";
 
 // Company Actions
 export async function createCompany(formData: FormData) {
@@ -98,4 +104,67 @@ export async function deleteContact(id: string) {
   });
 
   revalidatePath("/contacts");
+}
+
+// Auth Actions
+export async function signup(formData: FormData) {
+  const name = formData.get("name") as string;
+  const email = formData.get("email") as string;
+  const password = formData.get("password") as string;
+
+  if (!name || !email || !password) {
+    redirect("/signup?error=All+fields+are+required");
+  }
+
+  const existingUser = await prisma.user.findUnique({
+    where: { email },
+  });
+
+  if (existingUser) {
+    redirect("/signup?error=Email+already+in+use");
+  }
+
+  const hashedPassword = await hashPassword(password);
+
+  const user = await prisma.user.create({
+    data: {
+      name,
+      email,
+      password: hashedPassword,
+    },
+  });
+
+  await createSession(user.id);
+  redirect("/");
+}
+
+export async function login(formData: FormData) {
+  const email = formData.get("email") as string;
+  const password = formData.get("password") as string;
+
+  if (!email || !password) {
+    redirect("/login?error=Email+and+password+are+required");
+  }
+
+  const user = await prisma.user.findUnique({
+    where: { email },
+  });
+
+  if (!user) {
+    redirect("/login?error=Invalid+email+or+password");
+  }
+
+  const isValid = await verifyPassword(password, user.password);
+
+  if (!isValid) {
+    redirect("/login?error=Invalid+email+or+password");
+  }
+
+  await createSession(user.id);
+  redirect("/");
+}
+
+export async function logout() {
+  await deleteSession();
+  redirect("/login");
 }

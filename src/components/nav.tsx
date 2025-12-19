@@ -8,7 +8,9 @@ import {
   Building2,
   Users,
   Sparkles,
+  LogOut,
 } from "lucide-react";
+import { logout } from "@/lib/actions";
 
 const menuItems = [
   { href: "/", label: "Dashboard", icon: LayoutDashboard },
@@ -16,7 +18,14 @@ const menuItems = [
   { href: "/contacts", label: "Contacts", icon: Users },
 ];
 
-export function Nav() {
+interface NavProps {
+  user: {
+    name: string;
+    email: string;
+  };
+}
+
+export function Nav({ user }: NavProps) {
   const pathname = usePathname();
 
   return (
@@ -63,23 +72,30 @@ export function Nav() {
         </ul>
       </div>
 
-      {/* CTA Card */}
-      <div className="p-3">
-        <div className="rounded-xl bg-gradient-to-br from-primary to-orange-600 p-4">
-          <div className="w-10 h-10 rounded-lg bg-white/20 flex items-center justify-center mb-3">
-            <Sparkles className="w-5 h-5 text-white" />
+      {/* User & Logout */}
+      <div className="p-3 border-t border-sidebar-border">
+        <div className="flex items-center gap-3 px-3 py-2">
+          <div className="w-9 h-9 rounded-full bg-gradient-to-br from-primary to-orange-600 flex items-center justify-center text-white text-sm font-medium">
+            {user.name.charAt(0).toUpperCase()}
           </div>
-          <p className="text-sm font-semibold text-white mb-1">
-            Try CRM Pro AI
-          </p>
-          <p className="text-xs text-white/80 mb-3">
-            Make smarter, data-driven decisions with AI insights.
-          </p>
-          <button className="w-full bg-white text-primary text-sm font-medium py-2 px-4 rounded-lg hover:bg-white/90 transition-colors flex items-center justify-center gap-2">
-            <Sparkles className="w-4 h-4" />
-            Get An Analysis
-          </button>
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-medium text-sidebar-foreground truncate">
+              {user.name}
+            </p>
+            <p className="text-xs text-muted-foreground truncate">
+              {user.email}
+            </p>
+          </div>
         </div>
+        <form action={logout}>
+          <button
+            type="submit"
+            className="w-full flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-muted-foreground hover:bg-sidebar-accent/50 hover:text-sidebar-foreground transition-colors mt-1"
+          >
+            <LogOut className="w-5 h-5" />
+            Sign Out
+          </button>
+        </form>
       </div>
     </nav>
   );
